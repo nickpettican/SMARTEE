@@ -19,6 +19,8 @@ Social Media Automated Research Tool to Evaluate Engagement
 
 ### The output
 
+An Excel file with:
+
 * A line graph showing the spread of posts throughout the tracking time
 * A list of posts organised by author showing:
   - Likes
@@ -30,6 +32,8 @@ Social Media Automated Research Tool to Evaluate Engagement
   - Caption
   - And more
 * A table with the number of posts for the hashtag per day
+
+The output also comes as JSON, so if you are interested in this let me know in the issues section.
 
 ## Getting started
 
