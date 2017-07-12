@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# ___        SMARTEE V 0.0.1 by nickpettican			___
-# ___        Social Media Automated Research			___
-# ___        Tool for Evaluating Engagement				___
+# ___        SMARTEE V 0.0.1 by nickpettican            ___
+# ___        Social Media Automated Research            ___
+# ___        Tool for Evaluating Engagement             ___
 
 # ___        Copyright 2017 Nicolas Pettican			___
 
@@ -181,9 +181,6 @@ class instaCrawl:
 			try:
 				for tag in self.tags:
 					self.console.log('Looking for %s posts... \,' %(tag))
-					# right now it only checks for the top posts
-					# should I check for the recent too?
-					# how to differentiate?
 					posts = return_top_posts(tag, self.console)
 					if not self.only_top:
 						self.console.log('checking most recent... \,')
