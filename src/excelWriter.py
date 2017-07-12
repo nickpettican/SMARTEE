@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# ___        SMARTEE V 0.0.1 by nickpettican			___
-# ___        Social Media Automated Research			___
-# ___        Tool for Evaluating Engagement				___
+# ___        SMARTEE V 0.0.1 by nickpettican            ___
+# ___        Social Media Automated Research            ___
+# ___        Tool for Evaluating Engagement             ___
 
 # ___        Copyright 2017 Nicolas Pettican			___
 
@@ -125,12 +125,18 @@ class outputExcel:
 				# initialise the chart
 				chart = LineChart()
 				chart.title = '#' + hashtag
-				chart.style = 13
+				chart.style = 12
 				chart.y_axis.title = 'Number of posts'
+				chart.y_axis.crossAx = 500
+				chart.x_axis = DateAxis(crossAx=100)
+				chart.x_axis.number_format = 'd-mmm'
+				chart.x_axis.majorTimeUnit = 'days'
 				chart.x_axis.title = 'Date'
 				# add the data
-				chartData = Reference(DAsheet, min_col=1, min_row=2, max_col=2, max_row=len(by_date[hashtag]))
+				chartData = Reference(DAsheet, min_col=2, min_row=1, max_col=2, max_row=len(by_date[hashtag]))
+				dates = Reference(DAsheet, min_col=1, min_row=2, max_row=len(by_date[hashtag]))
 				chart.add_data(chartData, titles_from_data=True)
+				chart.set_categories(dates)
 				# style the chart
 				line1 = chart.series[0]
 				line1.smooth = True
@@ -143,8 +149,3 @@ class outputExcel:
 
 		wb.save(fileName)
 		self.console.log('done.')
-
-		# for row in final.values()[0]:
-		# 	print row
-		# for row in by_date.values()[0]:
-		# 	print row
