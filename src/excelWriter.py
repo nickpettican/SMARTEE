@@ -168,7 +168,7 @@ class outputExcel:
 		by_date = self.dateAnalytics(final)
 		by_user = self.userAnalytics(final)
 
-		fileName = self.out_path + arrow.now().format('YYYY_MM_DD-HH-mm') + '.xlsx'
+		fileName = self.out_path + arrow.now().format('YYYY_MM_DD') + '.xlsx'
 		wb = Workbook()
 		sheetFirst = wb.active
 		chart_position = 2

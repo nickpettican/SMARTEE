@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# ___        SMARTEE V 0.0.1 by nickpettican			___
-# ___        Social Media Automated Research			___
-# ___        Tool for Evaluating Engagement				___
+# ___        SMARTEE V 0.0.1 by nickpettican            ___
+# ___        Social Media Automated Research            ___
+# ___        Tool for Evaluating Engagement             ___
 
 # ___        Copyright 2017 Nicolas Pettican			___
 
@@ -105,6 +105,7 @@ def return_posts(data, key, browser, console):
 	try:
 		nodes = data['entry_data']['TagPage'][0]['tag'][key]['nodes']
 		for node in nodes:
+			post_temp = {'date': False}
 			try:
 				post_temp = {
 					'caption': node['caption'],
@@ -127,6 +128,16 @@ def return_posts(data, key, browser, console):
 				console.log('sorting data error: %s' %(e))
 					
 			if any(n for key, n in post_temp.items()):
+				year = False
+				if post_temp['date']:
+					try:
+						year = int(post_temp['date'].split('-').pop(0))
+					except:
+						pass
+				if year:
+					if year >= 2016:
+						posts.append(post_temp)
+					continue
 				posts.append(post_temp)
 
 	except Exception as e:
@@ -142,7 +153,7 @@ def return_username(code, browser, console):
 		return data['entry_data']['PostPage'][0]['graphql']['shortcode_media']['owner']['username']
 	
 	except Exception as e:
-		console.log('Error getting username: %s' %(e))
+		console.log('Error getting username: %s \,' %(e))
 		
 	return False
 	
