@@ -114,7 +114,7 @@ class outputExcel:
 
 		for hashtag, matrix in data.items():
 			matrix = matrix[1:]
-			table = [['User', 'Media', '%s Media' %(hashtag), 'Total Likes for %s' %(hashtag), 'Total Comments for %s' %(hashtag), 
+			table = [['User', 'Media', '#%s Media' %(hashtag), 'Total Likes for %s' %(hashtag), 'Total Comments for %s' %(hashtag), 
 						'Followers', 'Following', 'Avg Popularity', 'Top Hashtags Used']]
 			user = matrix[0][0]
 			# initialise counters
@@ -177,13 +177,13 @@ class outputExcel:
 		for hashtag in hashtags:
 			try:
 				print '# ',
-				sheet = wb.create_sheet(title = '#' + hashtag + ' users')
+				sheet = wb.create_sheet(title = '#' + hashtag + ' posts')
 				for row in final[hashtag]:
 					sheet.append(row)
-				userAnalyticsSheet = wb.create_sheet(title = '#' + hashtag + ' user analytics')
+				userAnalyticsSheet = wb.create_sheet(title = '#' + hashtag + ' users')
 				for row in by_user[hashtag]:
 					userAnalyticsSheet.append(row)
-				dateAnalyticsSheet = wb.create_sheet(title = '#' + hashtag + ' posts by date')
+				dateAnalyticsSheet = wb.create_sheet(title = '#' + hashtag + ' dates')
 				for row in by_date[hashtag]:
 					dateAnalyticsSheet.append(row)
 
@@ -204,7 +204,7 @@ class outputExcel:
 				chart.set_categories(dates)
 				# style the chart
 				line1 = chart.series[0]
-				line1.smooth = True
+				# line1.smooth = True
 				sheetFirst.add_chart(chart, 'A' + str(chart_position))
 				# increase chart position for next one
 				chart_position += 15

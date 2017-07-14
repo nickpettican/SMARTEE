@@ -37,24 +37,36 @@ def start_requests(console):
 		console.log('Error starting requests: %s' %(e))
 	
 	return False
+
+def return_timelimit(console):
+	# returns the timestamp before which posts will be ignored
+	# avoids picking up posts that are older than a week 
+
+	try:
+		return int(arrow.now().timestamp) - 60*60*24*7
+		# make int just in case
+	except Exception as e:
+		console.log('Error obtaining time limit: %s' %(e))
+
+	return False
 	
-def return_top_posts(tag, console):
+def return_top_posts(tag, console, timelimit):
 	# returns the top posts for a tag
 
-	return return_posts_by_type(tag, 'top_posts', console)
+	return return_posts_by_type(tag, 'top_posts', console, timelimit)
 
-def return_recent_posts(tag, console):
+def return_recent_posts(tag, console, timelimit):
 	# returns the most recent posts for a tag
 
-	return return_posts_by_type(tag, 'media', console)
+	return return_posts_by_type(tag, 'media', console, timelimit)
 
-def return_posts_by_type(tag, category, console):
+def return_posts_by_type(tag, category, console, timelimit):
 	# returns either top or recent posts
 
 	try:
 		browser = start_requests(console)
 		data = return_SharedData('https://www.instagram.com/explore/tags/%s/?hl=en' %(tag), browser, console)
-		posts = return_posts(data, category, browser, console)
+		posts = return_posts(data, category, browser, console, timelimit)
 		return posts
 
 	except Exception as e:
@@ -97,7 +109,7 @@ def return_hashtags(caption, console):
 
 	return []
 
-def return_posts(data, key, browser, console):
+def return_posts(data, key, browser, console, timelimit):
 	# returns the post data
 
 	posts = []
@@ -127,17 +139,15 @@ def return_posts(data, key, browser, console):
 			except Exception as e:
 				console.log('sorting data error: %s' %(e))
 					
-			if any(n for key, n in post_temp.items()):
-				year = False
-				if post_temp['date']:
+			if any(n for n in post_temp.values()):
+				if post_temp['timestamp'] and timelimit:
 					try:
-						year = int(post_temp['date'].split('-').pop(0))
+						# if the timestamp is 1 week earlier to when SMARTEE started
+						if int(post_temp['timestamp']) < timelimit:
+							# skip it
+							continue
 					except:
 						pass
-				if year:
-					if year >= 2016:
-						posts.append(post_temp)
-					continue
 				posts.append(post_temp)
 
 	except Exception as e:

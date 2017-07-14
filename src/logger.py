@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# ___        SMARTEE V 0.0.1 by nickpettican			___
-# ___        Social Media Automated Research			___
-# ___        Tool for Evaluating Engagement				___
+# ___        SMARTEE V 0.0.1 by nickpettican            ___
+# ___        Social Media Automated Research            ___
+# ___        Tool for Evaluating Engagement             ___
 
 # ___        Copyright 2017 Nicolas Pettican			___
 
@@ -24,23 +24,20 @@
 
 import arrow
 from csv import writer
-from os import mkdir, path
+from os import makedirs, path
 
 class Logger:
 
 	def __init__(self, module):
 		# initialise the logger variables
 
-		self.path = 'cache/' + module
+		self.path = 'cache/log/' + module
 		self.log_temp = ''
 		
-		if not path.isdir('cache/'):
-			mkdir('cache/')
+		if not path.isdir(self.path):
+			makedirs(self.path)
 		
 		self.init_log_name()
-
-		if not path.isdir(self.path):
-			mkdir(self.path)
 
 		header = '\n\t\t\tSMARTEE 1.0.0 by nickpettican\
 					\n\tSocial Media Automated Research Tool to Evaluate Engagement\n'

@@ -27,19 +27,21 @@ from logger import Logger
 from excelWriter import outputExcel
 from requests.exceptions import ConnectionError
 from time import sleep
-from os import path
+from os import path, mkdir
 
 class instaCrawl:
 	# the continuous version of instaCrawl
 	
-	def __init__(self, params = {'tags': [], 'tags_to_avoid': [], 'list_of_users': [], 'only_top_performing': False}):
+	def __init__(self, params = {'project': 'default', 'tags': [], 'tags_to_avoid': [], 'list_of_users': [], 'only_top_performing': False}):
 		# get everything started
 
+		self.name = params['project']
 		self.only_top = params['only_top_performing']
 		self.list_of_users_path = params['list_of_users']
 		self.tags = params['tags']
 		self.tags_to_avoid = params['tags_to_avoid']
 		self.console = Logger('instaCrawlLog')
+		self.timelimit = return_timelimit(self.console)
 		self.browser = start_requests(self.console)
 		self.import_data()
 		
@@ -47,8 +49,10 @@ class instaCrawl:
 		# import the data or initiate it
 
 		try:
-			if path.isfile('cache/instaCrawlData.json'):
-				with open('cache/instaCrawlData.json') as data_file:
+			# import previous JSON if available
+			# this way it will continue from when it stopped
+			if path.isfile('cache/JSON/%s.json' %(self.name)):
+				with open('cache/JSON/%s.json' %(self.name)) as data_file:
 					self.data = json.load(data_file)
 			
 			else:
@@ -77,10 +81,10 @@ class instaCrawl:
 					}	
 				}
 				self.data = {
-					# just for guiding purposes
-					#'hashtags': {'hashtag': [{'username': person_temp}]},
+					# it would look like -> 'hashtags': {'hashtag': [{'username': person_temp}]},
 					'hashtags': {},
-					'post_ids': []
+					'post_ids': [],
+					'users': []
 				}
 
 			self.users = False
@@ -111,7 +115,12 @@ class instaCrawl:
 		# what does this do? oh yes: back up the data
 
 		try:
-			with open('cache/dataBackup.json', 'wb') as outfile:
+			backupPath = 'cache/JSON'
+			
+			if not path.isdir(backupPath):
+				mkdir(backupPath)
+
+			with open('%s/%s.json' %(backupPath, self.name), 'wb') as outfile:
 				json.dump(self.data, outfile)
 
 		except Exception as e:
@@ -122,9 +131,8 @@ class instaCrawl:
 		
 		for post in posts:
 			print '# ',
-			# try:
-			if True:
-				if any(n in post['hashtags'] for n in self.tags_to_avoid):
+			try:
+				if any(n in post['caption'] for n in self.tags_to_avoid):
 					# skip this one
 					continue
 
@@ -140,7 +148,7 @@ class instaCrawl:
 					post['popularity'] = 0
 				
 				if user_data:
-					if post['owner_username'] in [user.keys()[0] for user in data['hashtags'][tag]]:
+					if post['owner_username'] in data['users']:
 						# update user data
 						for i, user in enumerate(data['hashtags'][tag]):
 							if post['owner_username'] == user.keys()[0]:
@@ -151,24 +159,23 @@ class instaCrawl:
 									# new post
 									data['hashtags'][tag][i][post['owner_username']]['media']['nodes'].append(post)
 									data['post_ids'].append(post['id'])
-								
-								else:
-									# update post data
-									for n, node in enumerate(data['hashtags'][tag][i][post['owner_username']]['media']['nodes']):
-										if post['id'] == node['id']:
-											data['hashtags'][tag][i][post['owner_username']]['media']['nodes'][n] = post
-											break
+									break
+								# update post data
+								for n, node in enumerate(data['hashtags'][tag][i][post['owner_username']]['media']['nodes']):
+									if post['id'] == node['id']:
+										data['hashtags'][tag][i][post['owner_username']]['media']['nodes'][n] = post
+										break
 								break
+						continue
+					# user is new
+					data['users'].append(post['owner_username'])
+					data_to_add = {post['owner_username']: user_data}
+					data_to_add[post['owner_username']]['media']['nodes'] = [post]
+					data['hashtags'][tag].append(data_to_add)
+					data['post_ids'].append(post['id'])
 
-					else:
-						# user is new
-						data_to_add = {post['owner_username']: user_data}
-						data_to_add[post['owner_username']]['media']['nodes'] = [post]
-						data['hashtags'][tag].append(data_to_add)
-						data['post_ids'].append(post['id'])
-
-			# except Exception as e:
-			# 	self.console.log("Error organising %s's data: %s" %(post['owner_username'], e))
+			except Exception as e:
+				self.console.log("Error organising %s's data: %s" %(post['owner_username'], e))
 
 		return data
 			
@@ -181,10 +188,10 @@ class instaCrawl:
 			try:
 				for tag in self.tags:
 					self.console.log('Looking for %s posts... \,' %(tag))
-					posts = return_top_posts(tag, self.console)
+					posts = return_top_posts(tag, self.console, self.timelimit)
 					if not self.only_top:
 						self.console.log('checking most recent... \,')
-						posts.extend(return_recent_posts(tag, self.console))
+						posts.extend(return_recent_posts(tag, self.console, self.timelimit))
 					self.console.log('found %s.\nOrganising data... \,' %(len(posts)))
 					self.data = self.organise_data(tag, posts, self.data)
 					self.console.log('done.\n')
@@ -192,6 +199,7 @@ class instaCrawl:
 					if not internet_connection():
 						raise ConnectionError
 
+				self.backup_data()
 				self.excel = outputExcel('instagram', self.console)
 				self.excel.write(self.data)
 
@@ -213,4 +221,3 @@ class instaCrawl:
 
 			except Exception as e:
 				self.console.log('Error: %s' %(e))
-
