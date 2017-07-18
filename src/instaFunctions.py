@@ -102,7 +102,11 @@ def return_hashtags(caption, console):
 	try:
 		broken_up = caption.lower().split()
 		if any(n.startswith('#') for n in broken_up):
-			return [n for n in broken_up if n.startswith('#')]
+			hashtags = [n for n in broken_up if n.startswith('#')]
+			for tag in hashtags:
+				if tag.count('#') > 1:
+					hashtags.remove(tag)
+					hashtags.extend(['#' + n for n in tag.split('#') if n])
 	
 	except Exception as e:
 		console.log('Error returning hashtags: %s' %(e))

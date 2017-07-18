@@ -31,6 +31,9 @@ from collections import Counter
 from datetime import date as d
 import arrow
 
+# debugging
+import json, time
+
 class outputExcel:
 
 	def __init__(self, mode, console):
@@ -61,17 +64,21 @@ class outputExcel:
 		# matrix of posts as the rows, columns being the data fields in those posts
 		# organised by username and popularity
 
-		header = [['Username', 'Followers', 'Following', 'Media', 'Date Published', 'Time Published', 'Timestamp', 'Popularity Score', 'Likes', 'Comments', 'Caption', 'URL', 'Image URL', 'Hashtags']]
-		final = {key: header for key in data['hashtags'].keys()}
+		header = ['Username', 'Followers', 'Following', 'Media', 'Date Published', 'Time Published', 'Timestamp', 'Popularity Score', 'Likes', 'Comments', 'Caption', 'URL', 'Image URL', 'Hashtags']
 		order = ['date', 'time', 'timestamp', 'popularity', 'likes_count', 'comments_count', 'caption', 'url', 'display_src', 'hashtags']
+		final = {}
 
 		for hashtag, user_data_list in data['hashtags'].items():
+			final[hashtag] = [header]
 			for user_data in user_data_list:
 				rows = [[user_data.keys()[0], user_data.values()[0]['followers'], user_data.values()[0]['following'], user_data.values()[0]['media']['count']] +
-						[post_data[i] if type(post_data[i]) != list else ', '.join(post_data[i]) for i in order] for post_data in user_data.values()[0]['media']['nodes'] if post_data]
+						[post_data[i] if type(post_data[i]) != list else ', '.join(post_data[i]) for i in order] 
+						for post_data in user_data.values()[0]['media']['nodes'] if post_data]
 
 				sorted_rows = sorted(rows, key = lambda x: -x[7])
 				final[hashtag].extend(sorted_rows)
+				print json.dumps(final, indent=4)
+				time.sleep(10)
 
 		return final
 
@@ -165,9 +172,12 @@ class outputExcel:
 		self.console.log('Writing to Excel... \,')
 		hashtags = data['hashtags'].keys()
 		final = self.prepareData(data)
-		by_date = self.dateAnalytics(final)
-		by_user = self.userAnalytics(final)
-
+		organisedFinal = {
+			'posts': final,
+			'users': self.userAnalytics(final),
+			'dates': self.dateAnalytics(final)
+		}
+		print json.dumps(final, indent=4)
 		fileName = self.out_path + arrow.now().format('YYYY_MM_DD') + '.xlsx'
 		wb = Workbook()
 		sheetFirst = wb.active
@@ -177,15 +187,10 @@ class outputExcel:
 		for hashtag in hashtags:
 			try:
 				print '# ',
-				sheet = wb.create_sheet(title = '#' + hashtag + ' posts')
-				for row in final[hashtag]:
-					sheet.append(row)
-				userAnalyticsSheet = wb.create_sheet(title = '#' + hashtag + ' users')
-				for row in by_user[hashtag]:
-					userAnalyticsSheet.append(row)
-				dateAnalyticsSheet = wb.create_sheet(title = '#' + hashtag + ' dates')
-				for row in by_date[hashtag]:
-					dateAnalyticsSheet.append(row)
+				for key, section in organisedFinal.items():
+					sheet = wb.create_sheet(title = '#' + hashtag + key)
+					for row in section:
+						sheet.append(row)
 
 				# initialise the chart
 				chart = LineChart()
