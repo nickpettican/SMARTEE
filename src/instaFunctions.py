@@ -133,7 +133,7 @@ def return_posts(data, key, browser, console, timelimit):
 					'time': arrow.get(node['date']).format('HH:mm'),
 					'code': node['code'],
 					'display_src': node['display_src'],
-					'url': 'https://www.instagram.com/explore/tags/%s/?hl=en' %(node['code']),
+					'url': 'https://www.instagram.com/p/%s/' %(node['code']),
 					'owner_username': return_username(node['code'], browser, console),
 					'likes_count': node['likes']['count'],
 					'comments_count': node['comments']['count'],
