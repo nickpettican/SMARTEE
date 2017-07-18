@@ -29,10 +29,8 @@ from openpyxl.chart import LineChart, Reference
 from os import path, mkdir
 from collections import Counter
 from datetime import date as d
+from itertools import chain
 import arrow
-
-# debugging
-import json, time
 
 class outputExcel:
 
@@ -70,15 +68,16 @@ class outputExcel:
 
 		for hashtag, user_data_list in data['hashtags'].items():
 			final[hashtag] = [header]
+			self.allHashtags[hashtag] = []
 			for user_data in user_data_list:
 				rows = [[user_data.keys()[0], user_data.values()[0]['followers'], user_data.values()[0]['following'], user_data.values()[0]['media']['count']] +
 						[post_data[i] if type(post_data[i]) != list else ', '.join(post_data[i]) for i in order] 
 						for post_data in user_data.values()[0]['media']['nodes'] if post_data]
+				userTags = [post[-1].split(', ') for post in rows if post[-1]]
+				self.allHashtags[hashtag].extend(chain.from_iterable(userTags))
 
 				sorted_rows = sorted(rows, key = lambda x: -x[7])
 				final[hashtag].extend(sorted_rows)
-				print json.dumps(final, indent=4)
-				time.sleep(10)
 
 		return final
 
@@ -170,6 +169,7 @@ class outputExcel:
 		# writes the instaCrawl object to xlsx
 
 		self.console.log('Writing to Excel... \,')
+		self.allHashtags = {}
 		hashtags = data['hashtags'].keys()
 		final = self.prepareData(data)
 		organisedFinal = {
@@ -177,20 +177,26 @@ class outputExcel:
 			'users': self.userAnalytics(final),
 			'dates': self.dateAnalytics(final)
 		}
-		print json.dumps(final, indent=4)
 		fileName = self.out_path + arrow.now().format('YYYY_MM_DD') + '.xlsx'
 		wb = Workbook()
 		sheetFirst = wb.active
+		sheetFirst.title = 'Stats'
 		chart_position = 2
+		topList_position = 17
 
 		# write the graphs to the first sheet
 		for hashtag in hashtags:
-			try:
+			if True:
+			# try:
 				print '# ',
 				for key, section in organisedFinal.items():
-					sheet = wb.create_sheet(title = '#' + hashtag + key)
-					for row in section:
-						sheet.append(row)
+					sheet = wb.create_sheet(title = '#%s %s' %(hashtag, key))
+					for row in section[hashtag]:
+						try:
+							sheet.append(row)
+						except:
+							print row
+							raise Exception('oops')
 
 				# initialise the chart
 				chart = LineChart()
@@ -203,8 +209,8 @@ class outputExcel:
 				chart.x_axis.majorTimeUnit = 'days'
 				chart.x_axis.title = 'Date'
 				# add the data
-				chartData = Reference(dateAnalyticsSheet, min_col=2, min_row=1, max_col=2, max_row=len(by_date[hashtag]))
-				dates = Reference(dateAnalyticsSheet, min_col=1, min_row=2, max_row=len(by_date[hashtag]))
+				chartData = Reference(wb['#%s %s' %(hashtag, 'dates')], min_col=2, min_row=1, max_col=2, max_row=len(organisedFinal['dates'][hashtag]))
+				dates = Reference(wb['#%s %s' %(hashtag, 'dates')], min_col=1, min_row=2, max_row=len(organisedFinal['dates'][hashtag]))
 				chart.add_data(chartData, titles_from_data=True)
 				chart.set_categories(dates)
 				# style the chart
@@ -212,10 +218,15 @@ class outputExcel:
 				# line1.smooth = True
 				sheetFirst.add_chart(chart, 'A' + str(chart_position))
 				# increase chart position for next one
-				chart_position += 15
+				chart_position += 18
+				# insert top hastags list
+				sheetFirst.cell(row=topList_position, column=1).value = 'Top Hashtags'
+				sheetFirst.cell(row=topList_position+1, column=1).value = ', '.join([n[0] for n in Counter(self.allHashtags[hashtag]).most_common(20)])
+				# increase position for next one
+				topList_position += 18
 
-			except Exception as e:
-				self.console.log('Error writing Excel file: %s' %(e))
+			# except Exception as e:
+			# 	self.console.log('Error writing Excel file: %s' %(e))
 
 		wb.save(fileName)
 		self.console.log('done.')
