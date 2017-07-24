@@ -186,8 +186,7 @@ class outputExcel:
 
 		# write the graphs to the first sheet
 		for hashtag in hashtags:
-			if True:
-			# try:
+			try:
 				print '# ',
 				for key, section in organisedFinal.items():
 					sheet = wb.create_sheet(title = '#%s %s' %(hashtag, key))
@@ -225,8 +224,8 @@ class outputExcel:
 				# increase position for next one
 				topList_position += 18
 
-			# except Exception as e:
-			# 	self.console.log('Error writing Excel file: %s' %(e))
+			except Exception as e:
+				self.console.log('Error writing Excel file: %s' %(e))
 
 		wb.save(fileName)
 		self.console.log('done.')

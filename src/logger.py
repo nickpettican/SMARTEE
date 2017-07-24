@@ -33,6 +33,7 @@ class Logger:
 
 		self.path = 'cache/log/' + module
 		self.log_temp = ''
+		self.new_line = True
 		
 		if not path.isdir(self.path):
 			makedirs(self.path)
@@ -60,12 +61,19 @@ class Logger:
 
 			if string == 'START':
 				print self.header
-				self.log_temp = ''
 				return
 
 			if string.endswith('\,'):
 				log = string.replace('\,', '')
+				
+				if self.new_line or log.startswith('\n'):
+					if log.startswith('\n'):
+						log = log.replace('\n', '')
+						print '\n'
+					log = arrow.now().format('[ YYYY-MM-DD HH:mm:ss ] ') + log
 				print log,
+
+				self.new_line = False
 				if self.log_temp:
 					try:
 						self.log_temp += log
@@ -80,6 +88,7 @@ class Logger:
 				if self.log_temp:
 					string = self.log_temp + string
 					self.log_temp = ''
+					self.new_line = True
 
 				self.log_main.append([string.strip()])
 
